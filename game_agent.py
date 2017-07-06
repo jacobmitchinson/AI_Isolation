@@ -112,6 +112,7 @@ class IsolationPlayer:
         positive value large enough to allow the function to return before the
         timer expires.
     """
+
     def __init__(self, search_depth=3, score_fn=custom_score, timeout=10.):
         self.search_depth = search_depth
         self.score = score_fn
@@ -172,6 +173,50 @@ class MinimaxPlayer(IsolationPlayer):
 
     def minimax(self, game, depth):
         """Implement depth-limited minimax search algorithm as described in
+            the lectures.
+
+            This should be a modified version of MINIMAX-DECISION in the AIMA text.
+            https://github.com/aimacode/aima-pseudocode/blob/master/md/Minimax-Decision.md
+
+            **********************************************************************
+             You MAY add additional methods to this class, or define helper
+                  functions to implement the required functionality.
+            **********************************************************************
+
+            Parameters
+            ----------
+            game : isolation.Board
+             An instance of the Isolation game `Board` class representing the
+             current game state
+
+            depth : int
+             Depth is an integer representing the maximum number of plies to
+             search in the game tree before aborting
+
+            Returns
+            -------
+            (int, int)
+             The board coordinates of the best move found in the current search;
+             (-1, -1) if there are no legal moves
+
+            Notes
+            -----
+             (1) You MUST use the `self.score()` method for board evaluation
+                 to pass the project tests; you cannot call any other evaluation
+                 function directly.
+
+             (2) If you use any helper functions (e.g., as shown in the AIMA
+                 pseudocode) then you must copy the timer check into the top of
+                 each helper function or else your agent will timeout during
+                 testing.
+        """
+        if self.time_left() < self.TIMER_THRESHOLD:
+            raise SearchTimeout()
+
+        return self._minimax(game, depth)[0]
+
+    def _minimax(self, game, depth):
+        """Implement depth-limited minimax search algorithm as described in
         the lectures.
 
         This should be a modified version of MINIMAX-DECISION in the AIMA text.
@@ -212,9 +257,26 @@ class MinimaxPlayer(IsolationPlayer):
         if self.time_left() < self.TIMER_THRESHOLD:
             raise SearchTimeout()
 
-        # TODO: finish this function!
-        raise NotImplementedError
+        if depth == 0:
+            return (None, self.score(game, self))
 
+        is_maximising_player = game.active_player == self
+
+        score = float('-inf') if is_maximising_player else float('inf')
+        compare = max if is_maximising_player else min
+
+        best_move = (-1, -1)
+
+        moves = game.get_legal_moves()
+
+        for move in moves:
+            forecast_score = self._minimax(game.forecast_move(move), depth - 1)[1]
+
+            if compare(score, forecast_score) == forecast_score:
+                best_move = move
+                score = compare(score, forecast_score)
+
+        return best_move, score
 
 class AlphaBetaPlayer(IsolationPlayer):
     """Game-playing agent that chooses a move using iterative deepening minimax
@@ -254,8 +316,20 @@ class AlphaBetaPlayer(IsolationPlayer):
         """
         self.time_left = time_left
 
-        # TODO: finish this function!
-        raise NotImplementedError
+        best_move = (-1, -1)
+
+        # Keep looking deeper until out of time
+        depth = 1
+        while True:
+            try:
+
+                best_move = self.alphabeta(game, depth)
+                depth += 1
+
+            except SearchTimeout:
+                break
+
+        return best_move
 
     def alphabeta(self, game, depth, alpha=float("-inf"), beta=float("inf")):
         """Implement depth-limited minimax search with alpha-beta pruning as
@@ -305,5 +379,47 @@ class AlphaBetaPlayer(IsolationPlayer):
         if self.time_left() < self.TIMER_THRESHOLD:
             raise SearchTimeout()
 
-        # TODO: finish this function!
-        raise NotImplementedError
+        return self._alphabeta(game, depth)[0]
+
+    def _alphabeta(self, game, depth, alpha=float("-inf"), beta=float("inf")):
+        if self.time_left() < self.TIMER_THRESHOLD:
+            raise SearchTimeout()
+
+        if depth == 0:
+            return (None, self.score(game, self))
+
+        is_maximising_player = game.active_player == self
+
+        is_alpha = True if is_maximising_player else False
+        is_beta =  True if not is_maximising_player else False
+        score = float('-inf') if is_maximising_player else float('inf')
+        compare = max if is_maximising_player else min
+
+        best_move = (-1, -1)
+
+        moves = game.get_legal_moves()
+
+        for move in moves:
+            forecast_game = game.forecast_move(move)
+
+            forecast_score = self._alphabeta(forecast_game, depth - 1, alpha, beta)[1]
+
+            if compare(score, forecast_score) == forecast_score:
+                best_move = move
+                score = compare(score, forecast_score)
+
+            if is_alpha:
+                if forecast_score >= beta:
+                    return (best_move, score)
+
+            if is_beta:
+                if forecast_score <= alpha:
+                    return (best_move, score)
+
+            if is_alpha:
+                alpha = compare(alpha, score)
+
+            if is_beta:
+                beta = compare(beta, score)
+
+        return best_move, score
