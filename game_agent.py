@@ -34,8 +34,27 @@ def custom_score(game, player):
     float
         The heuristic value of the current game state to the specified player.
     """
-    # TODO: finish this function!
-    raise NotImplementedError
+    if game.is_loser(player):
+        return float("-inf")
+
+    if game.is_winner(player):
+        return float("inf")
+
+    own_moves = len(game.get_legal_moves(player))
+    opp_moves = len(game.get_legal_moves(game.get_opponent(player)))
+
+    aggression = 2
+
+    spaces_remaining = float(len(game.get_blank_spaces())) / (game.width * game.height)
+    
+    if spaces_remaining >= .70:
+        aggression = 2.00
+    elif spaces_remaining >= .40:
+        aggression = 1.50
+    elif spaces_remaining >= .15:
+        aggression = 1.25
+
+    return float(own_moves - aggression * opp_moves)
 
 
 def custom_score_2(game, player):
@@ -60,9 +79,16 @@ def custom_score_2(game, player):
     float
         The heuristic value of the current game state to the specified player.
     """
-    # TODO: finish this function!
-    raise NotImplementedError
+    if game.is_loser(player):
+        return float("-inf")
 
+    if game.is_winner(player):
+        return float("inf")
+
+    own_moves = len(game.get_legal_moves(player))
+    opp_moves = len(game.get_legal_moves(game.get_opponent(player)))
+
+    return float(own_moves - 2 * opp_moves)
 
 def custom_score_3(game, player):
     """Calculate the heuristic value of a game state from the point of view
@@ -86,8 +112,26 @@ def custom_score_3(game, player):
     float
         The heuristic value of the current game state to the specified player.
     """
-    # TODO: finish this function!
-    raise NotImplementedError
+    if game.is_loser(player):
+        return float("-inf")
+
+    if game.is_winner(player):
+        return float("inf")
+
+    opponent_location = game.get_player_location(game.get_opponent(player))
+
+    opponent_x = opponent_location[0]
+    opponent_y = opponent_location[1]
+
+    symetrical_move = (game.width - opponent_x - 1, game.height - opponent_y - 1)
+
+    own_moves = len(game.get_legal_moves(player))
+    opp_moves = len(game.get_legal_moves(game.get_opponent(player)))
+
+    if symetrical_move in game.get_legal_moves(player):
+        return float(own_moves * 10 - (2 * opp_moves))
+    else:
+        return float(own_moves - (2 * opp_moves))
 
 
 class IsolationPlayer:
