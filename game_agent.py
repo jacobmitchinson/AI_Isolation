@@ -40,13 +40,20 @@ def custom_score(game, player):
     if game.is_winner(player):
         return float("inf")
 
+    # get own and opposition move
     own_moves = len(game.get_legal_moves(player))
     opp_moves = len(game.get_legal_moves(game.get_opponent(player)))
 
+    # set initial aggression level
     aggression = 2
 
+    # get the number of spaces remaining on the board
     spaces_remaining = float(len(game.get_blank_spaces())) / (game.width * game.height)
-    
+
+    """
+        This is a multi tiered approach to applying aggression where aggression
+        is highest as the start and lowers as the game goes on.
+    """
     if spaces_remaining >= .70:
         aggression = 2.00
     elif spaces_remaining >= .40:
@@ -54,6 +61,7 @@ def custom_score(game, player):
     elif spaces_remaining >= .15:
         aggression = 1.25
 
+    # return own moves minus opposition moves with aggression applied
     return float(own_moves - aggression * opp_moves)
 
 
@@ -85,9 +93,11 @@ def custom_score_2(game, player):
     if game.is_winner(player):
         return float("inf")
 
+    # get own and opposition moves
     own_moves = len(game.get_legal_moves(player))
     opp_moves = len(game.get_legal_moves(game.get_opponent(player)))
 
+    # return score
     return float(own_moves - 2 * opp_moves)
 
 def custom_score_3(game, player):
@@ -118,17 +128,25 @@ def custom_score_3(game, player):
     if game.is_winner(player):
         return float("inf")
 
+    # get the opponent location
     opponent_location = game.get_player_location(game.get_opponent(player))
 
+    # create variables for x and y coordinates
     opponent_x = opponent_location[0]
     opponent_y = opponent_location[1]
 
-    symetrical_move = (game.width - opponent_x - 1, game.height - opponent_y - 1)
+    # create the symmetrical move
+    symmetrical_move = (game.width - opponent_x - 1, game.height - opponent_y - 1)
 
+    # get own and opposition moves
     own_moves = len(game.get_legal_moves(player))
     opp_moves = len(game.get_legal_moves(game.get_opponent(player)))
 
-    if symetrical_move in game.get_legal_moves(player):
+    """
+        Check if a symmetrical move can be made and increase the score if this
+        is the case. Otherwise apply custom_score_2.
+    """
+    if symmetrical_move in game.get_legal_moves(player):
         return float(own_moves * 10 - (2 * opp_moves))
     else:
         return float(own_moves - (2 * opp_moves))
@@ -254,9 +272,11 @@ class MinimaxPlayer(IsolationPlayer):
                  each helper function or else your agent will timeout during
                  testing.
         """
+        # keep applying iterative deepening until out of time
         if self.time_left() < self.TIMER_THRESHOLD:
             raise SearchTimeout()
 
+        # take the best position
         return self._minimax(game, depth)[0]
 
     def _minimax(self, game, depth):
@@ -298,21 +318,37 @@ class MinimaxPlayer(IsolationPlayer):
                 each helper function or else your agent will timeout during
                 testing.
         """
+        # run the function until we timeout
         if self.time_left() < self.TIMER_THRESHOLD:
             raise SearchTimeout()
 
+        # return the score if the max depth is reached
         if depth == 0:
             return (None, self.score(game, self))
 
+        # set the maximising player based on the active player
         is_maximising_player = game.active_player == self
 
+        # use a negative or positive values based on maximising condition
         score = float('-inf') if is_maximising_player else float('inf')
+
+        # use the max function if maximising or min if not
         compare = max if is_maximising_player else min
 
+        # default best move
         best_move = (-1, -1)
 
+        # get all legal moves in the game
         moves = game.get_legal_moves()
 
+        """
+            Recursively call this function decreasing the depth by one each time.
+            This has the effect of looking at all nodes until the timer runs out.
+            We get the forecast score from this game simulation and compare it
+            with our current high score. We use the compare function which
+            will call max or min depending on whether we are on a minimising or
+            maximising node.
+        """
         for move in moves:
             forecast_score = self._minimax(game.forecast_move(move), depth - 1)[1]
 
@@ -420,29 +456,55 @@ class AlphaBetaPlayer(IsolationPlayer):
                 each helper function or else your agent will timeout during
                 testing.
         """
+        # apply iterative deepening
         if self.time_left() < self.TIMER_THRESHOLD:
             raise SearchTimeout()
 
+        # get the best move from alpha beta pruning
         return self._alphabeta(game, depth)[0]
 
+    """
+        This function applies alpha-beta pruning with iteartive deepening
+        to find the best move. It is a recursive function that will look
+        at each node until it times out.
+    """
     def _alphabeta(self, game, depth, alpha=float("-inf"), beta=float("inf")):
+        # return if timeout
         if self.time_left() < self.TIMER_THRESHOLD:
             raise SearchTimeout()
 
+        # return score if max depth reached
         if depth == 0:
             return (None, self.score(game, self))
 
+        # set the maximising player based on the active player
         is_maximising_player = game.active_player == self
 
+        # set alpha and beta depending on max or min
         is_alpha = True if is_maximising_player else False
         is_beta =  True if not is_maximising_player else False
+
+        # set negative offset
         score = float('-inf') if is_maximising_player else float('inf')
+
+        # create compare function depending on max or min
         compare = max if is_maximising_player else min
 
+        # default best move
         best_move = (-1, -1)
 
+        # get all legal moves
         moves = game.get_legal_moves()
 
+        """
+            Recursively call this function decreasing the depth by one each time.
+            This has the effect of looking at all nodes until the timer runs out.
+            We get the forecast score from this game simulation and compare it
+            with our current high score. We use the compare function which
+            will call max or min depending on whether we are on a minimising or
+            maximising node. We also keep track of alpha and beta and adjust
+            the best score using alpha beta pruning.
+        """
         for move in moves:
             forecast_game = game.forecast_move(move)
 
