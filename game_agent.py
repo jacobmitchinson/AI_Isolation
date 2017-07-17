@@ -505,26 +505,34 @@ class AlphaBetaPlayer(IsolationPlayer):
             the best score using alpha beta pruning.
         """
         for move in moves:
+            # forecast game with move
             forecast_game = game.forecast_move(move)
 
+            # retrieve the score for the game
             forecast_score = self._alphabeta(forecast_game, depth - 1, alpha, beta)[1]
 
+            # compare with current max or min score
             if compare(score, forecast_score) == forecast_score:
                 best_move = move
                 score = compare(score, forecast_score)
 
+            # prune alpha
             if is_alpha:
                 if forecast_score >= beta:
                     return (best_move, score)
 
+            # prune beta
             if is_beta:
                 if forecast_score <= alpha:
                     return (best_move, score)
 
+            # set new value for alpha
             if is_alpha:
                 alpha = compare(alpha, score)
 
+            # set new value for beta
             if is_beta:
                 beta = compare(beta, score)
 
+        # return best move and score tuple
         return best_move, score
