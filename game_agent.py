@@ -1,7 +1,3 @@
-"""Finish all TODO items in this file to complete the isolation project, then
-test your agent's strength against a set of known agents using tournament.py
-and include the results in your report.
-"""
 import random
 
 
@@ -306,17 +302,6 @@ class MinimaxPlayer(IsolationPlayer):
         (int, int)
             The board coordinates of the best move found in the current search;
             (-1, -1) if there are no legal moves
-
-        Notes
-        -----
-            (1) You MUST use the `self.score()` method for board evaluation
-                to pass the project tests; you cannot call any other evaluation
-                function directly.
-
-            (2) If you use any helper functions (e.g., as shown in the AIMA
-                pseudocode) then you must copy the timer check into the top of
-                each helper function or else your agent will timeout during
-                testing.
         """
         # run the function until we timeout
         if self.time_left() < self.TIMER_THRESHOLD:
@@ -412,19 +397,15 @@ class AlphaBetaPlayer(IsolationPlayer):
         return best_move
 
     def alphabeta(self, game, depth, alpha=float("-inf"), beta=float("inf")):
-        """Implement depth-limited minimax search with alpha-beta pruning as
-        described in the lectures.
-
-        This should be a modified version of ALPHA-BETA-SEARCH in the AIMA text
-        https://github.com/aimacode/aima-pseudocode/blob/master/md/Alpha-Beta-Search.md
-
-        **********************************************************************
-            You MAY add additional methods to this class, or define helper
-                 functions to implement the required functionality.
-        **********************************************************************
-
+        """
         Parameters
         ----------
+        **********************************************************************
+        NOTE: If time_left() < 0 when this function returns, the agent will
+              forfeit the game due to timeout. You must return _before_ the
+              timer reaches 0.
+        **********************************************************************
+
         game : isolation.Board
             An instance of the Isolation game `Board` class representing the
             current game state
@@ -444,17 +425,6 @@ class AlphaBetaPlayer(IsolationPlayer):
         (int, int)
             The board coordinates of the best move found in the current search;
             (-1, -1) if there are no legal moves
-
-        Notes
-        -----
-            (1) You MUST use the `self.score()` method for board evaluation
-                to pass the project tests; you cannot call any other evaluation
-                function directly.
-
-            (2) If you use any helper functions (e.g., as shown in the AIMA
-                pseudocode) then you must copy the timer check into the top of
-                each helper function or else your agent will timeout during
-                testing.
         """
         # apply iterative deepening
         if self.time_left() < self.TIMER_THRESHOLD:
@@ -469,6 +439,35 @@ class AlphaBetaPlayer(IsolationPlayer):
         at each node until it times out.
     """
     def _alphabeta(self, game, depth, alpha=float("-inf"), beta=float("inf")):
+        """
+        Parameters
+        ----------
+        **********************************************************************
+        NOTE: If time_left() < 0 when this function returns, the agent will
+              forfeit the game due to timeout. You must return _before_ the
+              timer reaches 0.
+        **********************************************************************
+
+        game : isolation.Board
+            An instance of the Isolation game `Board` class representing the
+            current game state
+
+        depth : int
+            Depth is an integer representing the maximum number of plies to
+            search in the game tree before aborting
+
+        alpha : float
+            Alpha limits the lower bound of search on minimizing layers
+
+        beta : float
+            Beta limits the upper bound of search on maximizing layers
+
+        Returns
+        -------
+        (int, int)
+            The board coordinates of the best move found in the current search;
+            (-1, -1) if there are no legal moves
+        """
         # return if timeout
         if self.time_left() < self.TIMER_THRESHOLD:
             raise SearchTimeout()
