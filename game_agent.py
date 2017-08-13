@@ -479,16 +479,6 @@ class AlphaBetaPlayer(IsolationPlayer):
         # set the maximising player based on the active player
         is_maximising_player = game.active_player == self
 
-        # set alpha and beta depending on max or min
-        is_alpha = True if is_maximising_player else False
-        is_beta =  True if not is_maximising_player else False
-
-        # set negative offset
-        score = float('-inf') if is_maximising_player else float('inf')
-
-        # create compare function depending on max or min
-        compare = max if is_maximising_player else min
-
         # default best move
         best_move = (-1, -1)
 
@@ -499,40 +489,24 @@ class AlphaBetaPlayer(IsolationPlayer):
             Recursively call this function decreasing the depth by one each time.
             This has the effect of looking at all nodes until the timer runs out.
             We get the forecast score from this game simulation and compare it
-            with our current high score. We use the compare function which
-            will call max or min depending on whether we are on a minimising or
-            maximising node. We also keep track of alpha and beta and adjust
+            with our current high score. We also keep track of alpha and beta and adjust
             the best score using alpha beta pruning.
         """
+
         for move in moves:
-            # forecast game with move
-            forecast_game = game.forecast_move(move)
+            forecast_move = game.forecast_move(move)
+            score = self._alphabeta(forecast_move, depth - 1, alpha, beta)[1]
+            if is_maximising_player:
+                if score > alpha:
+                    alpha = score
+                    best_move = move
+            else:
+                if score < beta:
+                    beta = score
+                    best_move = move
 
-            # retrieve the score for the game
-            forecast_score = self._alphabeta(forecast_game, depth - 1, alpha, beta)[1]
+            if alpha >= beta:
+                break
 
-            # compare with current max or min score
-            if compare(score, forecast_score) == forecast_score:
-                best_move = move
-                score = compare(score, forecast_score)
-
-            # prune alpha
-            if is_alpha:
-                if forecast_score >= beta:
-                    return (best_move, score)
-
-            # prune beta
-            if is_beta:
-                if forecast_score <= alpha:
-                    return (best_move, score)
-
-            # set new value for alpha
-            if is_alpha:
-                alpha = compare(alpha, score)
-
-            # set new value for beta
-            if is_beta:
-                beta = compare(beta, score)
-
-        # return best move and score tuple
+        score = alpha if is_maximising_player else beta
         return best_move, score
